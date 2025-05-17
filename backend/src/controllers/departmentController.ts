@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
-import pool from '../config/database';
+import { pool } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import type { RowDataPacket } from 'mysql2/promise';
 
-interface DepartmentRow extends RowDataPacket {
+interface Department {
   id: string;
   name: string;
   description: string;
@@ -11,8 +10,9 @@ interface DepartmentRow extends RowDataPacket {
 
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query<DepartmentRow[]>('SELECT * FROM departments');
-    res.json(rows);
+    const [rows] = await pool.query('SELECT * FROM departments');
+    const departments = rows as Department[];
+    res.json(departments);
   } catch (error) {
     console.error('Error fetching departments:', error);
     res.status(500).json({ message: 'Error fetching departments' });

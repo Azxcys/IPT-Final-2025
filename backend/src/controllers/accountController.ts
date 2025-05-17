@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
-import pool from '../config/database';
+import { pool } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import type { RowDataPacket } from 'mysql2/promise';
 
-interface AccountRow extends RowDataPacket {
+interface Account {
   id: string;
   username: string;
   password: string;
@@ -13,8 +12,9 @@ interface AccountRow extends RowDataPacket {
 
 export const getAccounts = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query<AccountRow[]>('SELECT * FROM accounts');
-    res.json(rows);
+    const [rows] = await pool.query('SELECT * FROM accounts');
+    const accounts = rows as Account[];
+    res.json(accounts);
   } catch (error) {
     console.error('Error fetching accounts:', error);
     res.status(500).json({ message: 'Error fetching accounts' });
