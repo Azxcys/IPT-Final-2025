@@ -16,7 +16,7 @@ async function initializeDatabase() {
 
     // Execute each statement
     for (const statement of statements) {
-      await pool.query(statement);
+      await pool.execute(statement);
     }
 
     console.log('Database initialized successfully');
