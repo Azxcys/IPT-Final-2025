@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket } from 'mysql2';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 interface EmployeeRow extends RowDataPacket {
   id: string;
@@ -19,7 +19,7 @@ interface EmployeeRow extends RowDataPacket {
 
 export const getEmployees = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const [rows] = await pool.query<EmployeeRow[]>(`
+    const [rows] = await pool.execute<EmployeeRow[]>(`
       SELECT e.*, a.username, d.name as department_name 
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
@@ -34,7 +34,7 @@ export const getEmployees = async (req: Request, res: Response, next: NextFuncti
 export const getEmployeeById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query<EmployeeRow[]>(`
+    const [rows] = await pool.execute<EmployeeRow[]>(`
       SELECT e.*, a.username, d.name as department_name 
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
@@ -68,7 +68,7 @@ export const createEmployee = async (req: Request, res: Response, next: NextFunc
 
     const id = uuidv4();
 
-    await pool.query(
+    await pool.execute(
       `INSERT INTO employees (
         id, account_id, department_id, position, 
         first_name, last_name, email, phone, status
@@ -106,13 +106,13 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
     } = req.body;
 
     // Check if employee exists
-    const [existing] = await pool.query<EmployeeRow[]>('SELECT id FROM employees WHERE id = ?', [id]);
+    const [existing] = await pool.execute<EmployeeRow[]>('SELECT id FROM employees WHERE id = ?', [id]);
     if (existing.length === 0) {
       res.status(404).json({ message: 'Employee not found' });
       return;
     }
 
-    await pool.query(
+    await pool.execute(
       `UPDATE employees 
        SET department_id = ?, position = ?, first_name = ?, 
            last_name = ?, email = ?, phone = ?, status = ?
@@ -138,7 +138,7 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
 export const deleteEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM employees WHERE id = ?', [id]);
+    await pool.execute('DELETE FROM employees WHERE id = ?', [id]);
     res.json({ message: 'Employee deleted successfully' });
   } catch (error) {
     next(error);
@@ -148,7 +148,7 @@ export const deleteEmployee = async (req: Request, res: Response, next: NextFunc
 export const getEmployeesByDepartment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { departmentId } = req.params;
-    const [rows] = await pool.query<EmployeeRow[]>(`
+    const [rows] = await pool.execute<EmployeeRow[]>(`
       SELECT e.*, a.username 
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
