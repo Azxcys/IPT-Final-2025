@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import type { RowDataPacket } from 'mysql2/promise';
+import { RowDataPacket } from 'mysql2';
 
 interface DepartmentRow extends RowDataPacket {
   id: string;
