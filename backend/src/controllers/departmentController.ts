@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { pool } from '../config/database';
+import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Department {
@@ -10,7 +10,7 @@ interface Department {
 
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM departments');
+    const [rows] = await pool.execute('SELECT * FROM departments');
     const departments = rows as Department[];
     res.json(departments);
   } catch (error) {
@@ -24,7 +24,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     const { name, description } = req.body;
     const id = uuidv4();
 
-    await pool.query(
+    await pool.execute(
       'INSERT INTO departments (id, name, description) VALUES (?, ?, ?)',
       [id, name, description]
     );
@@ -41,7 +41,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    await pool.query(
+    await pool.execute(
       'UPDATE departments SET name = ?, description = ? WHERE id = ?',
       [name, description, id]
     );
@@ -56,7 +56,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
 export const deleteDepartment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM departments WHERE id = ?', [id]);
+    await pool.execute('DELETE FROM departments WHERE id = ?', [id]);
     res.json({ message: 'Department deleted successfully' });
   } catch (error) {
     console.error('Error deleting department:', error);
