@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import pool from './database';
+import { RowDataPacket } from 'mysql2/promise';
 
 async function initializeDatabase() {
   try {
@@ -16,7 +17,7 @@ async function initializeDatabase() {
 
     // Execute each statement
     for (const statement of statements) {
-      await pool.query(statement);
+      await pool.query<RowDataPacket[]>(statement);
     }
 
     console.log('Database initialized successfully');
