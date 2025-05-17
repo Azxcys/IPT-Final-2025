@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import pool from '../config/database';
+import { pool } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import type { RowDataPacket } from 'mysql2/promise';
 
-interface EmployeeRow extends RowDataPacket {
+interface Employee {
   id: string;
   account_id: string;
   department_id: string;
@@ -19,13 +18,14 @@ interface EmployeeRow extends RowDataPacket {
 
 export const getEmployees = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const [rows] = await pool.query<EmployeeRow[]>(`
+    const [rows] = await pool.query(`
       SELECT e.*, a.username, d.name as department_name 
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
       LEFT JOIN departments d ON e.department_id = d.id
     `);
-    res.json(rows);
+    const employees = rows as Employee[];
+    res.json(employees);
   } catch (error) {
     next(error);
   }
@@ -34,7 +34,7 @@ export const getEmployees = async (req: Request, res: Response, next: NextFuncti
 export const getEmployeeById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query<EmployeeRow[]>(`
+    const [rows] = await pool.query(`
       SELECT e.*, a.username, d.name as department_name 
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
@@ -42,12 +42,13 @@ export const getEmployeeById = async (req: Request, res: Response, next: NextFun
       WHERE e.id = ?
     `, [id]);
     
-    if (rows.length === 0) {
+    const employees = rows as Employee[];
+    if (employees.length === 0) {
       res.status(404).json({ message: 'Employee not found' });
       return;
     }
     
-    res.json(rows[0]);
+    res.json(employees[0]);
   } catch (error) {
     next(error);
   }
@@ -106,8 +107,9 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
     } = req.body;
 
     // Check if employee exists
-    const [existing] = await pool.query<EmployeeRow[]>('SELECT id FROM employees WHERE id = ?', [id]);
-    if (existing.length === 0) {
+    const [existing] = await pool.query('SELECT id FROM employees WHERE id = ?', [id]);
+    const existingEmployees = existing as Employee[];
+    if (existingEmployees.length === 0) {
       res.status(404).json({ message: 'Employee not found' });
       return;
     }
@@ -148,13 +150,14 @@ export const deleteEmployee = async (req: Request, res: Response, next: NextFunc
 export const getEmployeesByDepartment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { departmentId } = req.params;
-    const [rows] = await pool.query<EmployeeRow[]>(`
+    const [rows] = await pool.query(`
       SELECT e.*, a.username 
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
       WHERE e.department_id = ?
     `, [departmentId]);
-    res.json(rows);
+    const employees = rows as Employee[];
+    res.json(employees);
   } catch (error) {
     next(error);
   }
