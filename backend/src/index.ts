@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import accountRoutes from './routes/accountRoutes';
 import departmentRoutes from './routes/departmentRoutes';
+import employeeRoutes from './routes/employeeRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/accounts', accountRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
@@ -24,7 +26,7 @@ app.get('/', (req, res) => {
 });
 
 // Set port and start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
