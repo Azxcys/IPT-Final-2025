@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 interface AccountRow extends RowDataPacket {
   id: string;
@@ -13,7 +13,7 @@ interface AccountRow extends RowDataPacket {
 
 export const getAccounts = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.execute<AccountRow[]>('SELECT * FROM accounts');
+    const [rows] = await pool.query<AccountRow[]>('SELECT * FROM accounts');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching accounts:', error);
@@ -26,7 +26,7 @@ export const createAccount = async (req: Request, res: Response) => {
     const { username, password, role, status } = req.body;
     const id = uuidv4();
 
-    await pool.execute(
+    await pool.query(
       'INSERT INTO accounts (id, username, password, role, status) VALUES (?, ?, ?, ?, ?)',
       [id, username, password, role, status]
     );
@@ -43,7 +43,7 @@ export const updateAccount = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { username, password, role, status } = req.body;
 
-    await pool.execute(
+    await pool.query(
       'UPDATE accounts SET username = ?, password = ?, role = ?, status = ? WHERE id = ?',
       [username, password, role, status, id]
     );
@@ -58,7 +58,7 @@ export const updateAccount = async (req: Request, res: Response) => {
 export const deleteAccount = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await pool.execute('DELETE FROM accounts WHERE id = ?', [id]);
+    await pool.query('DELETE FROM accounts WHERE id = ?', [id]);
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Error deleting account:', error);

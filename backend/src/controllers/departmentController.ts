@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 interface DepartmentRow extends RowDataPacket {
   id: string;
@@ -11,7 +11,7 @@ interface DepartmentRow extends RowDataPacket {
 
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.execute<DepartmentRow[]>('SELECT * FROM departments');
+    const [rows] = await pool.query<DepartmentRow[]>('SELECT * FROM departments');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching departments:', error);
@@ -24,7 +24,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     const { name, description } = req.body;
     const id = uuidv4();
 
-    await pool.execute(
+    await pool.query(
       'INSERT INTO departments (id, name, description) VALUES (?, ?, ?)',
       [id, name, description]
     );
@@ -41,7 +41,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    await pool.execute(
+    await pool.query(
       'UPDATE departments SET name = ?, description = ? WHERE id = ?',
       [name, description, id]
     );
@@ -56,7 +56,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
 export const deleteDepartment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await pool.execute('DELETE FROM departments WHERE id = ?', [id]);
+    await pool.query('DELETE FROM departments WHERE id = ?', [id]);
     res.json({ message: 'Department deleted successfully' });
   } catch (error) {
     console.error('Error deleting department:', error);

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket, ResultSetHeader, OkPacket } from 'mysql2';
+import { RowDataPacket } from 'mysql2';
 
 interface EmployeeRow extends RowDataPacket {
   id: string;
@@ -68,7 +68,7 @@ export const createEmployee = async (req: Request, res: Response, next: NextFunc
 
     const id = uuidv4();
 
-    await pool.query<OkPacket>(
+    await pool.query(
       `INSERT INTO employees (
         id, account_id, department_id, position, 
         first_name, last_name, email, phone, status
@@ -112,7 +112,7 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    await pool.query<OkPacket>(
+    await pool.query(
       `UPDATE employees 
        SET department_id = ?, position = ?, first_name = ?, 
            last_name = ?, email = ?, phone = ?, status = ?
@@ -138,7 +138,7 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
 export const deleteEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    await pool.query<OkPacket>('DELETE FROM employees WHERE id = ?', [id]);
+    await pool.query('DELETE FROM employees WHERE id = ?', [id]);
     res.json({ message: 'Employee deleted successfully' });
   } catch (error) {
     next(error);
