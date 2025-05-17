@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket } from 'mysql2';
+import { QueryError, RowDataPacket } from 'mysql2';
 
 interface AccountRow extends RowDataPacket {
   id: string;
@@ -13,7 +13,7 @@ interface AccountRow extends RowDataPacket {
 
 export const getAccounts = async (req: Request, res: Response) => {
   try {
-    pool.query<AccountRow[]>('SELECT * FROM accounts', (error, rows) => {
+    pool.query<AccountRow[]>('SELECT * FROM accounts', (error: QueryError | null, rows: AccountRow[]) => {
       if (error) {
         console.error('Error fetching accounts:', error);
         res.status(500).json({ message: 'Error fetching accounts' });
@@ -35,7 +35,7 @@ export const createAccount = async (req: Request, res: Response) => {
     pool.query(
       'INSERT INTO accounts (id, username, password, role, status) VALUES (?, ?, ?, ?, ?)',
       [id, username, password, role, status],
-      (error) => {
+      (error: QueryError | null) => {
         if (error) {
           console.error('Error creating account:', error);
           res.status(500).json({ message: 'Error creating account' });
@@ -58,7 +58,7 @@ export const updateAccount = async (req: Request, res: Response) => {
     pool.query(
       'UPDATE accounts SET username = ?, password = ?, role = ?, status = ? WHERE id = ?',
       [username, password, role, status, id],
-      (error) => {
+      (error: QueryError | null) => {
         if (error) {
           console.error('Error updating account:', error);
           res.status(500).json({ message: 'Error updating account' });
@@ -76,7 +76,7 @@ export const updateAccount = async (req: Request, res: Response) => {
 export const deleteAccount = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    pool.query('DELETE FROM accounts WHERE id = ?', [id], (error) => {
+    pool.query('DELETE FROM accounts WHERE id = ?', [id], (error: QueryError | null) => {
       if (error) {
         console.error('Error deleting account:', error);
         res.status(500).json({ message: 'Error deleting account' });

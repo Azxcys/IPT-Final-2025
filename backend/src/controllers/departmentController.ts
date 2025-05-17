@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket } from 'mysql2';
+import { QueryError, RowDataPacket } from 'mysql2';
 
 interface DepartmentRow extends RowDataPacket {
   id: string;
@@ -11,7 +11,7 @@ interface DepartmentRow extends RowDataPacket {
 
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    pool.query<DepartmentRow[]>('SELECT * FROM departments', (error, rows) => {
+    pool.query<DepartmentRow[]>('SELECT * FROM departments', (error: QueryError | null, rows: DepartmentRow[]) => {
       if (error) {
         console.error('Error fetching departments:', error);
         res.status(500).json({ message: 'Error fetching departments' });
@@ -33,7 +33,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     pool.query(
       'INSERT INTO departments (id, name, description) VALUES (?, ?, ?)',
       [id, name, description],
-      (error) => {
+      (error: QueryError | null) => {
         if (error) {
           console.error('Error creating department:', error);
           res.status(500).json({ message: 'Error creating department' });
@@ -56,7 +56,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
     pool.query(
       'UPDATE departments SET name = ?, description = ? WHERE id = ?',
       [name, description, id],
-      (error) => {
+      (error: QueryError | null) => {
         if (error) {
           console.error('Error updating department:', error);
           res.status(500).json({ message: 'Error updating department' });
@@ -74,7 +74,7 @@ export const updateDepartment = async (req: Request, res: Response) => {
 export const deleteDepartment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    pool.query('DELETE FROM departments WHERE id = ?', [id], (error) => {
+    pool.query('DELETE FROM departments WHERE id = ?', [id], (error: QueryError | null) => {
       if (error) {
         console.error('Error deleting department:', error);
         res.status(500).json({ message: 'Error deleting department' });

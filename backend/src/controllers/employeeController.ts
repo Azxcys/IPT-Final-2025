@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
-import { RowDataPacket } from 'mysql2';
+import { QueryError, RowDataPacket } from 'mysql2';
 
 interface EmployeeRow extends RowDataPacket {
   id: string;
@@ -24,7 +24,7 @@ export const getEmployees = async (req: Request, res: Response, next: NextFuncti
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
       LEFT JOIN departments d ON e.department_id = d.id
-    `, (error, rows) => {
+    `, (error: QueryError | null, rows: EmployeeRow[]) => {
       if (error) {
         next(error);
         return;
@@ -45,7 +45,7 @@ export const getEmployeeById = async (req: Request, res: Response, next: NextFun
       LEFT JOIN accounts a ON e.account_id = a.id
       LEFT JOIN departments d ON e.department_id = d.id
       WHERE e.id = ?
-    `, [id], (error, rows) => {
+    `, [id], (error: QueryError | null, rows: EmployeeRow[]) => {
       if (error) {
         next(error);
         return;
@@ -82,7 +82,7 @@ export const createEmployee = async (req: Request, res: Response, next: NextFunc
         first_name, last_name, email, phone, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, account_id, department_id, position, first_name, last_name, email, phone, status],
-      (error) => {
+      (error: QueryError | null) => {
         if (error) {
           next(error);
           return;
@@ -121,7 +121,7 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
     pool.query<EmployeeRow[]>(
       'SELECT id FROM employees WHERE id = ?',
       [id],
-      (error, existing) => {
+      (error: QueryError | null, existing: EmployeeRow[]) => {
         if (error) {
           next(error);
           return;
@@ -137,7 +137,7 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
                last_name = ?, email = ?, phone = ?, status = ?
            WHERE id = ?`,
           [department_id, position, first_name, last_name, email, phone, status, id],
-          (error) => {
+          (error: QueryError | null) => {
             if (error) {
               next(error);
               return;
@@ -164,7 +164,7 @@ export const updateEmployee = async (req: Request, res: Response, next: NextFunc
 export const deleteEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    pool.query('DELETE FROM employees WHERE id = ?', [id], (error) => {
+    pool.query('DELETE FROM employees WHERE id = ?', [id], (error: QueryError | null) => {
       if (error) {
         next(error);
         return;
@@ -184,7 +184,7 @@ export const getEmployeesByDepartment = async (req: Request, res: Response, next
       FROM employees e
       LEFT JOIN accounts a ON e.account_id = a.id
       WHERE e.department_id = ?
-    `, [departmentId], (error, rows) => {
+    `, [departmentId], (error: QueryError | null, rows: EmployeeRow[]) => {
       if (error) {
         next(error);
         return;
